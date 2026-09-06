@@ -28,6 +28,7 @@ interface Message {
 }
 
 export default function Home() {
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [activeTab, setActiveTab] = useState<"chat" | "workflow" | "tools">("chat");
   const [statusData, setStatusData] = useState<any>(null);
 
@@ -48,7 +49,7 @@ export default function Home() {
   const [inputQuery, setInputQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Workflow Tracer state
+  // Workflow state
   const [workflowSteps, setWorkflowSteps] = useState<WorkflowStep[]>([
     {
       step_number: 1,
@@ -79,6 +80,7 @@ export default function Home() {
       details: { source_pages: 423 },
     },
   ]);
+
   const [lastLatency, setLastLatency] = useState<number>(0);
   const [lastIntent, setLastIntent] = useState<string>("SYSTEM_READY");
   const [lastDomain, setLastDomain] = useState<string>("general");
@@ -87,13 +89,33 @@ export default function Home() {
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Load status on mount
+  // Load theme and status on mount
   useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem("aegis_theme") as "light" | "dark" | null;
+      const initialTheme = savedTheme || "light";
+      setTheme(initialTheme);
+      document.documentElement.setAttribute("data-theme", initialTheme);
+    } catch {
+      // Fallback
+    }
+
     fetch("http://localhost:8000/api/status")
       .then((res) => res.json())
       .then((data) => setStatusData(data))
       .catch((err) => console.error("Could not fetch status:", err));
   }, []);
+
+  const toggleTheme = () => {
+    const next = theme === "light" ? "dark" : "light";
+    setTheme(next);
+    document.documentElement.setAttribute("data-theme", next);
+    try {
+      localStorage.setItem("aegis_theme", next);
+    } catch {
+      // Fallback
+    }
+  };
 
   // Scroll to bottom of chat
   useEffect(() => {
@@ -165,9 +187,15 @@ export default function Home() {
   };
 
   return (
-    <div className="app-container">
+    <div className="app-container" data-theme={theme}>
       {/* Top Navigation */}
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} statusData={statusData} />
+      <Navbar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        theme={theme}
+        toggleTheme={toggleTheme}
+        statusData={statusData}
+      />
 
       {/* 1-Click Judge Benchmark Suite */}
       <JudgeBenchmarkBar onSelectPrompt={handleTriggerBenchmark} isLoading={isLoading} />
@@ -194,7 +222,7 @@ export default function Home() {
                       {/* Page Citations */}
                       {m.citations && m.citations.length > 0 && (
                         <div className="citation-container">
-                          <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 600 }}>
+                          <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 700 }}>
                             Physical Page Citations:
                           </span>
                           {m.citations.map((c) => (
