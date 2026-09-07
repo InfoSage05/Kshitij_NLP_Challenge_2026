@@ -194,12 +194,12 @@ class AegisAgent:
             payload = execute_mock_action(tool_name, args)
 
             reply = (
-                f"### Autonomous Action Executed: `{tool_name}`\n\n"
-                f"I have triggered the requested enterprise operation through the **{payload.get('domain', 'enterprise')}** gateway.\n\n"
-                f"- **Reference ID**: `{payload.get('mock_response', {}).get('reference_id', 'N/A')}`\n"
-                f"- **Status**: `{payload.get('status', 'SUCCESS')} (HTTP 200 OK)`\n"
-                f"- **Timestamp**: `{payload.get('timestamp')}`\n\n"
-                f"The structured JSON action payload has been generated and is displayed in the **Action Inspector** on the right."
+                f"Autonomous Action Executed: {tool_name}\n\n"
+                f"I have triggered the requested enterprise operation through the {payload.get('domain', 'enterprise')} gateway.\n\n"
+                f"- Reference ID: {payload.get('mock_response', {}).get('reference_id', 'N/A')}\n"
+                f"- Status: {payload.get('status', 'SUCCESS')} (HTTP 200 OK)\n"
+                f"- Timestamp: {payload.get('timestamp')}\n\n"
+                f"The structured JSON action payload has been generated and is displayed in the Action Inspector on the right."
             )
 
             latency = (time.time() - start_time) * 1000
@@ -258,7 +258,7 @@ class AegisAgent:
 
         joined_context = "\n\n".join(context_snippets[:3])
         sorted_pages = sorted(list(cited_pages))
-        page_tags = ", ".join([f"**[Page {p}]**" for p in sorted_pages])
+        pages_str = ", ".join([f"Page {p}" for p in sorted_pages])
 
         # Synthesize clear answer
         lead_chunk = chunks[0]["content"]
@@ -267,10 +267,10 @@ class AegisAgent:
         summary_bullets = "\n".join([f"- {s}" for s in sentences[:4]]) if sentences else f"- {lead_chunk[:250]}..."
 
         reply = (
-            f"### Grounded Response from HCLTech Annual Report 2024-25\n\n"
-            f"Based on the official corporate filings in the report ({page_tags}):\n\n"
+            f"Grounded Response from HCLTech Annual Report 2024-25:\n\n"
+            f"Based on the official corporate filings in the report ({pages_str}):\n\n"
             f"{summary_bullets}\n\n"
-            f"> **Page Citation**: Found on {page_tags} of *HCLTech Annual Integrated Report 2024-25*."
+            f"Page Citation: Verified from {pages_str} of HCLTech Annual Integrated Report 2024-25."
         )
 
         latency = (time.time() - start_time) * 1000

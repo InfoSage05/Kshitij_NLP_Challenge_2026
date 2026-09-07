@@ -25,6 +25,165 @@ interface Message {
   actionPayload?: Record<string, any> | null;
   intent?: string;
   latencyMs?: number;
+  timestamp?: string;
+}
+
+/* Comprehensive normal chat formatter:
+   Eliminates all raw markdown symbols ('#', '**', '*', '>', '`')
+   and renders clean, professional enterprise chat responses. */
+function renderFormatted(text: string): React.ReactNode {
+  if (!text) return null;
+
+  const lines = text.split("\n");
+
+  return lines.map((rawLine, lIdx) => {
+    // 1. Strip leading markdown headers like ### or ## or #
+    let line = rawLine.replace(/^[ \t]*#{1,6}\s*/, "").trimEnd();
+
+    // 2. Strip blockquotes like >
+    line = line.replace(/^[ \t]*>\s*/, "");
+
+    // 3. Strip any stray # symbols anywhere in the line
+    line = line.replace(/#/g, "");
+
+    // Preserve blank spacing
+    if (!line.trim()) {
+      return <div key={lIdx} style={{ height: "6px" }} />;
+    }
+
+    // Check if line was a header / section title
+    const isHeading =
+      rawLine.trim().startsWith("#") ||
+      line.startsWith("Grounded Response") ||
+      line.startsWith("Autonomous Action Executed:");
+
+    // Check if line is a bullet item (starts with - or •)
+    const isBullet = line.trim().startsWith("- ") || line.trim().startsWith("• ");
+    const bulletContent = isBullet ? line.trim().replace(/^[-•]\s*/, "") : line;
+
+    // Parse inline bold (**text**) and code (`code`) into clean HTML elements with zero raw symbols
+    const parts: React.ReactNode[] = [];
+    const regex = /(\*\*([^*]+)\*\*|`([^`]+)`|\*([^*]+)\*)/g;
+    let last = 0;
+    let m: RegExpExecArray | null;
+    let key = 0;
+
+    while ((m = regex.exec(bulletContent)) !== null) {
+      if (m.index > last) {
+        // Strip any stray asterisks or backticks in plain text segment
+        parts.push(bulletContent.slice(last, m.index).replace(/[\*`]/g, ""));
+      }
+      if (m[2]) {
+        // Render bold text cleanly without any asterisks
+        parts.push(
+          <strong key={key++} style={{ fontWeight: 600 }}>
+            {m[2].replace(/[\*`]/g, "")}
+          </strong>
+        );
+      } else if (m[3]) {
+        // Render inline code cleanly without backticks
+        parts.push(
+          <code
+            key={key++}
+            style={{
+              fontSize: "12px",
+              background: "rgba(127, 141, 166, 0.15)",
+              padding: "1px 5px",
+              borderRadius: "4px",
+              fontFamily: "var(--font-mono)",
+            }}
+          >
+            {m[3]}
+          </code>
+        );
+      } else if (m[4]) {
+        // Render italic cleanly without asterisks
+        parts.push(<em key={key++}>{m[4].replace(/[\*`]/g, "")}</em>);
+      }
+      last = m.index + m[0].length;
+    }
+
+    if (last < bulletContent.length) {
+      parts.push(bulletContent.slice(last).replace(/[\*`]/g, ""));
+    }
+
+    if (isHeading) {
+      return (
+        <div
+          key={lIdx}
+          style={{
+            fontSize: "15px",
+            fontWeight: 700,
+            color: "var(--text-main)",
+            marginTop: lIdx > 0 ? "8px" : "0",
+            marginBottom: "4px",
+          }}
+        >
+          {parts}
+        </div>
+      );
+    }
+
+    if (isBullet) {
+      return (
+        <div
+          key={lIdx}
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "8px",
+            margin: "3px 0",
+            lineHeight: "1.5",
+          }}
+        >
+          <span style={{ color: "var(--primary)", fontWeight: 700, userSelect: "none" }}>•</span>
+          <div>{parts}</div>
+        </div>
+      );
+    }
+
+    return (
+      <div key={lIdx} style={{ lineHeight: "1.6", margin: "2px 0" }}>
+        {parts}
+      </div>
+    );
+  });
+}
+
+const IconSend = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 2L11 13" />
+    <path d="M22 2l-7 20-4-9-9-4 20-7z" />
+  </svg>
+);
+
+const IconDoc = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <path d="M14 2v6h6" />
+    <path d="M9 13h6M9 17h6" />
+  </svg>
+);
+
+const IconBook = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z" />
+    <path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5" />
+  </svg>
+);
+
+const IconZap = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" />
+  </svg>
+);
+
+function nowTime(): string {
+  try {
+    return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  } catch {
+    return "";
+  }
 }
 
 export default function Home() {
@@ -37,59 +196,54 @@ export default function Home() {
       id: "welcome",
       role: "assistant",
       content:
-        "👋 **Welcome to AegisEnterprise Copilot!**\n\n" +
-        "I am your autonomous enterprise copilot for **HCLTech** operations. I can:\n" +
-        "1. **Answer document queries** with exact page citations from the *HCLTech Annual Report 2024-25* (423 pages).\n" +
-        "2. **Execute enterprise actions** (Schedule HR syncs, file IT tickets, provision software, log GitHub issues).\n\n" +
-        "Select any test from the **Judge Benchmark Suite** above or enter your query below!",
+        "Welcome to AegisEnterprise Copilot — the workplace assistant for HCLTech operations.\n\nI answer questions grounded in the HCLTech Annual Report 2024-25 (423 pages, every claim cited by page), and I execute routine IT, HR, and engineering actions as validated JSON.\n\nUse the Evaluate bar above to run a one-click check, or type a question below to begin.",
       citations: [],
+      timestamp: nowTime(),
     },
   ]);
 
   const [inputQuery, setInputQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Workflow state
   const [workflowSteps, setWorkflowSteps] = useState<WorkflowStep[]>([
     {
       step_number: 1,
-      name: "Autonomous Intent Routing",
-      description: "Classifies natural language input into enterprise action or document RAG query.",
+      name: "Intent classification & routing",
+      description: "Routes input to the RAG branch or the action branch.",
       status: "COMPLETED",
-      details: { ready: true },
+      details: { state: "ready" },
     },
     {
       step_number: 2,
-      name: "Parameter Extraction & Vector Retrieval",
-      description: "Extracts action parameters or retrieves top-k chunks from 2,139 ChromaDB vectors.",
+      name: "Retrieval / parameter extraction",
+      description: "Top-k vector retrieval over 2,139 chunks, or structured argument extraction.",
       status: "COMPLETED",
       details: { collection: "hcltech_annual_report_2024_25" },
     },
     {
       step_number: 3,
-      name: "Pydantic Schema Validation",
-      description: "Enforces strict RFC 8259 enterprise data contracts across IT, HR, and Dev domains.",
+      name: "Schema validation",
+      description: "Pydantic v2 contract check for enterprise actions.",
       status: "COMPLETED",
-      details: { compliance: "100% Valid" },
+      details: { compliance: "100% valid" },
     },
     {
       step_number: 4,
-      name: "JSON Mock Dispatch & Citation Grounding",
-      description: "Generates mock execution ID and physical page citations from the 423-page report.",
+      name: "Dispatch & grounding",
+      description: "Mock execution payload plus page-anchored citations.",
       status: "COMPLETED",
       details: { source_pages: 423 },
     },
   ]);
 
   const [lastLatency, setLastLatency] = useState<number>(0);
-  const [lastIntent, setLastIntent] = useState<string>("SYSTEM_READY");
+  const [lastIntent, setLastIntent] = useState<string>("READY");
   const [lastDomain, setLastDomain] = useState<string>("general");
   const [lastActionPayload, setLastActionPayload] = useState<Record<string, any> | null>(null);
   const [inspectingPage, setInspectingPage] = useState<number | null>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Load theme and status on mount
   useEffect(() => {
     try {
       const savedTheme = localStorage.getItem("aegis_theme") as "light" | "dark" | null;
@@ -97,7 +251,7 @@ export default function Home() {
       setTheme(initialTheme);
       document.documentElement.setAttribute("data-theme", initialTheme);
     } catch {
-      // Fallback
+      /* noop */
     }
 
     fetch("http://localhost:8000/api/status")
@@ -113,14 +267,13 @@ export default function Home() {
     try {
       localStorage.setItem("aegis_theme", next);
     } catch {
-      // Fallback
+      /* noop */
     }
   };
 
-  // Scroll to bottom of chat
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, activeTab]);
 
   const handleSend = async (queryText: string) => {
     if (!queryText.trim() || isLoading) return;
@@ -129,6 +282,7 @@ export default function Home() {
       id: Date.now().toString(),
       role: "user",
       content: queryText.trim(),
+      timestamp: nowTime(),
     };
 
     setMessages((prev) => [...prev, userMsg]);
@@ -156,6 +310,7 @@ export default function Home() {
         actionPayload: data.action_payload,
         intent: data.intent,
         latencyMs: data.execution_time_ms,
+        timestamp: nowTime(),
       };
 
       setMessages((prev) => [...prev, botMsg]);
@@ -171,7 +326,8 @@ export default function Home() {
       const errorMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: `⚠️ **Connection Error**: Unable to reach AegisEnterprise backend (${err.message}). Ensure \`api.py\` is running on port 8000.`,
+        content: `Connection error — the backend is unreachable (${err.message}). Start the API with "python -m uvicorn api:app --port 8000" and retry.`,
+        timestamp: nowTime(),
       };
       setMessages((prev) => [...prev, errorMsg]);
     } finally {
@@ -188,7 +344,6 @@ export default function Home() {
 
   return (
     <div className="app-container" data-theme={theme}>
-      {/* Top Navigation */}
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -197,63 +352,119 @@ export default function Home() {
         statusData={statusData}
       />
 
-      {/* 1-Click Judge Benchmark Suite */}
       <JudgeBenchmarkBar onSelectPrompt={handleTriggerBenchmark} isLoading={isLoading} />
 
-      {/* Main Body depending on Tab */}
       {activeTab === "workflow" ? (
         <WorkflowGraphTab />
       ) : activeTab === "tools" ? (
         <ToolRegistryTab onTriggerTool={handleTriggerBenchmark} />
       ) : (
         <div className="main-content">
-          {/* Left Column: Conversational Workspace */}
           <div className="chat-pane">
-            <div className="chat-history">
-              {messages.map((m) => (
-                <div key={m.id} className={`message-bubble ${m.role}`}>
-                  <div className={`avatar ${m.role}`}>
-                    {m.role === "assistant" ? "🤖" : "👤"}
-                  </div>
-                  <div>
-                    <div className="message-content">
-                      <div style={{ whiteSpace: "pre-line" }}>{m.content}</div>
+            <div className="chat-pane-header">
+              <div>
+                <div className="chat-pane-title">Copilot Console</div>
+                <div className="chat-pane-sub">Grounded answers · Validated actions · Full audit trail</div>
+              </div>
+              <div className="header-badges">
+                <span className="mini-badge">{lastIntent}</span>
+                <span className="mini-badge">{lastDomain.replace(/_/g, " ")}</span>
+                <span className="mini-badge accent">
+                  {lastLatency > 0 ? `${Math.round(lastLatency)} ms` : "idle"}
+                </span>
+              </div>
+            </div>
 
-                      {/* Page Citations */}
+            <div className="chat-history">
+              {messages.map((m) =>
+                m.id === "welcome" ? (
+                  <div key={m.id} className="message-row assistant" style={{ maxWidth: "100%" }}>
+                    <div className="avatar bot">AE</div>
+                    <div className="welcome-card" style={{ flex: 1 }}>
+                      <span className="welcome-kicker">HCLTech Annual Report 2024–25 · 423 pages</span>
+                      <div className="welcome-title">What can this copilot do?</div>
+                      <p className="welcome-text">
+                        Ask anything about the integrated annual report — every answer carries a
+                        verifiable page citation. Or issue a workplace command and inspect the
+                        validated JSON it produces.
+                      </p>
+                      <ul className="welcome-list">
+                        <li>
+                          <span>{IconBook}</span>
+                          <span>“What are the key risks on page 45?” — opens the exact source page for audit.</span>
+                        </li>
+                        <li>
+                          <span>{IconZap}</span>
+                          <span>“File a critical VPN ticket for Noida SEZ” — generates an RFC 8259 action payload.</span>
+                        </li>
+                      </ul>
+                      <div className="message-meta">
+                        <span>System ready</span>
+                        {m.timestamp && (
+                          <>
+                            <span>·</span>
+                            <span suppressHydrationWarning>{m.timestamp}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div key={m.id} className={`message-row ${m.role === "user" ? "user" : "assistant"}`}>
+                    <div className={`avatar ${m.role === "assistant" ? "bot" : "user"}`}>
+                      {m.role === "assistant" ? "AE" : "You"}
+                    </div>
+                    <div className="message-card">
+                      <div className="message-body">{renderFormatted(m.content)}</div>
+
                       {m.citations && m.citations.length > 0 && (
-                        <div className="citation-container">
-                          <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 700 }}>
-                            Physical Page Citations:
-                          </span>
+                        <div className="citation-row">
+                          <span className="citation-label">Sources — select to inspect page</span>
                           {m.citations.map((c) => (
                             <button
                               key={c.citation_id}
                               className="citation-chip"
                               onClick={() => setInspectingPage(c.page)}
-                              title={`Click to view physical page ${c.page} in HCLTech report`}
+                              title="Open verbatim page text"
                             >
-                              📍 Page {c.page} ({(c.score * 100).toFixed(0)}%)
+                              {IconDoc}
+                              p.{c.page} · {(c.score * 100).toFixed(0)}%
                             </button>
                           ))}
                         </div>
                       )}
+
+                      <div className="message-meta">
+                        {m.intent && <span>{m.intent}</span>}
+                        {typeof m.latencyMs === "number" && m.latencyMs > 0 && (
+                          <>
+                            <span>·</span>
+                            <span>{Math.round(m.latencyMs)} ms</span>
+                          </>
+                        )}
+                        {m.timestamp && (
+                          <>
+                            <span>·</span>
+                            <span suppressHydrationWarning>{m.timestamp}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              )}
               {isLoading && (
-                <div className="message-bubble bot">
-                  <div className="avatar bot">🤖</div>
-                  <div className="message-content" style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div className="status-dot"></div>
-                    <span>Evaluating intent, verifying schemas & querying ChromaDB...</span>
+                <div className="message-row assistant">
+                  <div className="avatar bot">AE</div>
+                  <div className="typing-card">
+                    <span className="spinner" />
+                    <span>Classifying intent, checking schema, querying ChromaDB…</span>
                   </div>
                 </div>
               )}
               <div ref={chatEndRef} />
             </div>
 
-            {/* Chat Input Bar */}
             <div className="chat-input-container">
               <form
                 className="chat-input-form"
@@ -265,19 +476,23 @@ export default function Home() {
                 <input
                   type="text"
                   className="chat-input"
-                  placeholder="Ask a question about HCLTech report or trigger an action (e.g. 'Schedule meeting with HR')..."
+                  placeholder="Ask about the annual report, or type an action — e.g. “Schedule a meeting with HR tomorrow at 10am”…"
                   value={inputQuery}
                   onChange={(e) => setInputQuery(e.target.value)}
                   disabled={isLoading}
+                  aria-label="Message the copilot"
                 />
                 <button type="submit" className="chat-send-btn" disabled={isLoading || !inputQuery.trim()}>
-                  Send ➔
+                  {IconSend}
+                  Send
                 </button>
               </form>
+              <div className="chat-hint">
+                Citations open the verbatim PDF page · Actions emit <code>execution_id</code> JSON for audit
+              </div>
             </div>
           </div>
 
-          {/* Right Column: Workflow State Stepper & Action Inspector */}
           <div className="inspector-pane">
             <WorkflowTracer
               steps={workflowSteps}
@@ -293,7 +508,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Verifiable Page Inspector Modal */}
       <PageInspectorModal
         pageNumber={inspectingPage}
         onClose={() => setInspectingPage(null)}

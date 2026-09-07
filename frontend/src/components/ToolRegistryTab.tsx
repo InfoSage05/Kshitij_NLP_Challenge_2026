@@ -13,9 +13,18 @@ interface ToolRegistryTabProps {
   onTriggerTool: (samplePrompt: string) => void;
 }
 
+function domainClass(domain: string): string {
+  const d = (domain || "").toLowerCase();
+  if (d.includes("it_")) return "pill-it";
+  if (d.includes("hr_")) return "pill-hr";
+  if (d.includes("developer")) return "pill-dev";
+  return "pill-rag";
+}
+
 export const ToolRegistryTab: React.FC<ToolRegistryTabProps> = ({ onTriggerTool }) => {
   const [tools, setTools] = useState<ToolItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     fetch("http://localhost:8000/api/tools")
@@ -26,6 +35,7 @@ export const ToolRegistryTab: React.FC<ToolRegistryTabProps> = ({ onTriggerTool 
       })
       .catch(() => {
         setLoading(false);
+        setFailed(true);
       });
   }, []);
 
@@ -43,86 +53,67 @@ export const ToolRegistryTab: React.FC<ToolRegistryTabProps> = ({ onTriggerTool 
 
   if (loading) {
     return (
-      <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
-        Loading enterprise tool registry from FastAPI...
+      <div className="tab-page">
+        <div className="tab-loading">
+          <span className="spinner" />
+          Loading tool registry from the API gateway…
+        </div>
+      </div>
+    );
+  }
+
+  if (failed || tools.length === 0) {
+    return (
+      <div className="tab-page">
+        <div className="tab-inner">
+          <div className="panel-card">
+            <div className="branch-title">Registry unavailable</div>
+            <p className="branch-text">
+              Could not reach <code>/api/tools</code>. Start the backend
+              (<code>python -m uvicorn api:app --port 8000</code>) and reopen this tab.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: "32px", overflowY: "auto", height: "100%" }}>
-      <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
-        <div style={{ marginBottom: "24px" }}>
-          <h2 style={{ fontSize: "22px", fontWeight: 800, color: "var(--text-main)" }}>
-            🗂️ Enterprise Action & Pydantic Schema Registry
-          </h2>
-          <p style={{ color: "var(--text-sub)", fontSize: "14px", marginTop: "4px" }}>
-            All registered tools conform to strict Pydantic v2 schemas and output RFC 8259 JSON contracts.
+    <div className="tab-page">
+      <div className="tab-inner">
+        <div className="section-head">
+          <div className="section-eyebrow">Tool registry · {tools.length} tools</div>
+          <h2 className="section-title">Enterprise actions & schemas</h2>
+          <p className="section-desc">
+            Each tool is a Pydantic v2 contract. Triggering one sends a natural-language
+            command through the console and returns the validated JSON in the inspector.
           </p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "16px" }}>
+        <div className="tools-grid">
           {tools.map((t) => {
             const prompt = samplePrompts[t.name] || `Execute action ${t.name}`;
+            const required = t.json_schema?.required?.length ?? 0;
             return (
-              <div
-                key={t.name}
-                style={{
-                  background: "var(--bg-card)",
-                  border: "1px solid var(--border-subtle)",
-                  borderRadius: "12px",
-                  padding: "18px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  boxShadow: "var(--shadow-sm)",
-                }}
-              >
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                    <span
-                      style={{
-                        fontSize: "10px",
-                        fontFamily: "var(--font-mono)",
-                        textTransform: "uppercase",
-                        padding: "2px 8px",
-                        borderRadius: "4px",
-                        background: "var(--primary-subtle)",
-                        color: "var(--primary)",
-                        fontWeight: 700,
-                      }}
-                    >
-                      {t.domain.replace("_", " ")}
-                    </span>
-                    <span style={{ fontSize: "11px", color: "var(--accent-emerald)", fontWeight: 700 }}>● Active</span>
-                  </div>
-                  <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-main)", marginBottom: "6px" }}>
-                    <code>{t.name}</code>
-                  </div>
-                  <p style={{ fontSize: "12px", color: "var(--text-sub)", lineHeight: "1.5", marginBottom: "12px" }}>
-                    {t.description}
-                  </p>
+              <div key={t.name} className="tool-card">
+                <div className="tool-top">
+                  <span className={`pill ${domainClass(t.domain)}`}>
+                    {t.domain.replace(/_/g, " ")}
+                  </span>
+                  <span className="tool-live">
+                    <span className="dot" />
+                    Active
+                  </span>
                 </div>
-
-                <div>
-                  <button
-                    onClick={() => onTriggerTool(prompt)}
-                    style={{
-                      width: "100%",
-                      background: "linear-gradient(135deg, #1e3a8a, #2563eb)",
-                      border: "none",
-                      color: "#fff",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      padding: "8px 12px",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                      transition: "all 0.2s",
-                    }}
-                  >
-                    ⚡ Test Trigger Action
-                  </button>
+                <div className="tool-name">{t.name}</div>
+                <p className="tool-desc">{t.description || "Validated enterprise action."}</p>
+                <div className="step-tags" style={{ marginTop: 0 }}>
+                  <span className="step-tag">{required} required fields</span>
+                  <span className="step-tag">RFC 8259</span>
                 </div>
+                <button className="tool-btn" onClick={() => onTriggerTool(prompt)}>
+                  Run sample request
+                </button>
               </div>
             );
           })}
