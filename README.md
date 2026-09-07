@@ -3,21 +3,61 @@
 
 **AegisEnterprise** is an autonomous digital workplace assistant engineered for enterprise productivity across **IT Service Desk**, **HR Operations**, and **Developer Support**. It couples a **Page-Accurate RAG Engine** indexing the mandatory 423-page *HCLTech Annual Integrated Report 2024-25* with **Pydantic-validated Function Calling / Mock Action Execution**.
 
+[![Next.js](https://img.shields.io/badge/Frontend-Next.js%2016%20Turbopack-black?style=flat-square&logo=next.js)](http://localhost:3000)
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI%200.115-009688?style=flat-square&logo=fastapi)](http://localhost:8000/docs)
+[![ChromaDB](https://img.shields.io/badge/Vector%20DB-ChromaDB%202%2C139%20Chunks-orange?style=flat-square)](https://www.trychroma.com/)
+[![PyMuPDF](https://img.shields.io/badge/PDF%20Engine-PyMuPDF%20423%20Pages-red?style=flat-square)](https://pymupdf.readthedocs.io/)
+[![Pydantic](https://img.shields.io/badge/Validation-Pydantic%20v2%20(RFC%208259)-e92063?style=flat-square)](https://docs.pydantic.dev/)
+[![Kshitij 2026](https://img.shields.io/badge/Competition-Kshitij%202026%20IIT%20Kharagpur-blue?style=flat-square)](https://kshitij.org/)
+
 ---
 
 ## 📸 Enterprise Dashboard Showcase
 
-### ☀️ Light Theme (Default Crisp Enterprise View)
+### 1. 🖥️ Executive Console — Dual-Theme UI System
+The copilot console provides an executive-grade dual-theme interface designed for modern digital workplaces, complete with a **1-Click Judge Benchmark Suite**, live health telemetry, and dual-pane chat and inspector layout.
+
+#### ☀️ Light Theme (Default Crisp Enterprise View)
+*Clean, corporate-grade layout optimized for day-to-day enterprise operations, featuring instant telemetry for ChromaDB (2,139 chunks loaded across 423 pages) and preloaded benchmark evaluation buttons.*
 ![AegisEnterprise Light Theme](docs/screenshots/copilot_light_theme.png)
 
-### 🌙 Dark Theme (Modern High-Contrast Dark Mode)
+#### 🌙 Dark Theme (Modern High-Contrast Dark Mode)
+*Tailored for developer productivity and engineering workspaces with high-contrast slate surfaces, vibrant domain accents, and zero-eye-strain aesthetics.*
 ![AegisEnterprise Dark Theme](docs/screenshots/copilot_dark_theme.png)
 
-### ⚡ Live Agentic State Machine Trace & Grounded Citations
+---
+
+### 2. 🔍 Page-Accurate RAG & Verifiable Page Inspector
+Eliminates LLM hallucination through deterministic physical page chunk anchoring against the mandatory 423-page *HCLTech Annual Integrated Report 2024-25*.
+
+#### ⚡ Live Agentic State Machine Trace & Grounded Citations
+*Queries are classified into RAG queries, matched against ChromaDB vector embeddings (`all-MiniLM-L6-v2`), and returned with verifiable `[Page X]` badges alongside step-by-step latency metrics and hallucination verification.*
 ![AegisEnterprise RAG Execution](docs/screenshots/copilot_rag_active.png)
 
-### 📦 RFC 8259 Structured Action Inspector
+#### 📄 Verifiable Physical Page Inspector Modal
+*Clicking any citation badge (`📍 Page 45`) instantly pulls the raw, unedited page text directly from the physical PDF via PyMuPDF in a modal, allowing judges and auditors to verify claims against the official corporate report.*
+![AegisEnterprise Page Inspector](docs/screenshots/copilot_page_inspector.png)
+
+---
+
+### 3. ⚙️ Pydantic-Validated Function Calling & Action Inspector
+Autonomous multi-domain action dispatch for IT Service Desk, HR Operations, and Developer Support with RFC 8259 JSON compliance.
+
+#### 📦 RFC 8259 Structured Action Inspector & Live State Machine
+*Employee commands (e.g. "File a critical ticket: GlobalProtect VPN gateway failure in Noida SEZ") are parsed, validated against strict Pydantic v2 data models, and dispatched into mock execution payloads with copyable and downloadable JSON contracts.*
 ![AegisEnterprise Action Execution](docs/screenshots/copilot_action_active.png)
+
+---
+
+### 4. 🏗️ Architecture Visualization & Multi-Domain Tool Catalog
+
+#### ⚡ Interactive Workflow Architecture & Rubric Alignment
+*Interactive tab detailing the dual-branch system architecture (Branch 1: Page-Accurate RAG; Branch 2: Schema-Validated Function Calling) mapped directly against Kshitij 2026 scoring rubrics (Accuracy 30%, Agent Capabilities 30%, Practicality 25%, Presentation 15%).*
+![AegisEnterprise Workflow Architecture](docs/screenshots/copilot_workflow_architecture.png)
+
+#### 🗂️ Enterprise Action & Pydantic Schema Registry
+*Catalog of all 9 registered multi-domain operational tools with 1-click interactive triggers and strict data validation contracts.*
+![AegisEnterprise Tool Registry](docs/screenshots/copilot_tool_registry.png)
 
 ---
 

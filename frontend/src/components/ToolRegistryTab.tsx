@@ -53,10 +53,10 @@ export const ToolRegistryTab: React.FC<ToolRegistryTabProps> = ({ onTriggerTool 
     <div style={{ padding: "32px", overflowY: "auto", height: "100%" }}>
       <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
         <div style={{ marginBottom: "24px" }}>
-          <h2 style={{ fontSize: "22px", fontWeight: 800, color: "#f3f4f6" }}>
+          <h2 style={{ fontSize: "22px", fontWeight: 800, color: "var(--text-main)" }}>
             🗂️ Enterprise Action & Pydantic Schema Registry
           </h2>
-          <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginTop: "4px" }}>
+          <p style={{ color: "var(--text-sub)", fontSize: "14px", marginTop: "4px" }}>
             All registered tools conform to strict Pydantic v2 schemas and output RFC 8259 JSON contracts.
           </p>
         </div>
@@ -68,13 +68,14 @@ export const ToolRegistryTab: React.FC<ToolRegistryTabProps> = ({ onTriggerTool 
               <div
                 key={t.name}
                 style={{
-                  background: "rgba(17, 24, 39, 0.75)",
+                  background: "var(--bg-card)",
                   border: "1px solid var(--border-subtle)",
                   borderRadius: "12px",
                   padding: "18px",
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "space-between",
+                  boxShadow: "var(--shadow-sm)",
                 }}
               >
                 <div>
@@ -86,18 +87,19 @@ export const ToolRegistryTab: React.FC<ToolRegistryTabProps> = ({ onTriggerTool 
                         textTransform: "uppercase",
                         padding: "2px 8px",
                         borderRadius: "4px",
-                        background: "rgba(59, 130, 246, 0.15)",
-                        color: "#60a5fa",
+                        background: "var(--primary-subtle)",
+                        color: "var(--primary)",
+                        fontWeight: 700,
                       }}
                     >
                       {t.domain.replace("_", " ")}
                     </span>
-                    <span style={{ fontSize: "11px", color: "#34d399", fontWeight: 600 }}>● Active</span>
+                    <span style={{ fontSize: "11px", color: "var(--accent-emerald)", fontWeight: 700 }}>● Active</span>
                   </div>
-                  <div style={{ fontSize: "15px", fontWeight: 700, color: "#f3f4f6", marginBottom: "6px" }}>
+                  <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-main)", marginBottom: "6px" }}>
                     <code>{t.name}</code>
                   </div>
-                  <p style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: "1.5", marginBottom: "12px" }}>
+                  <p style={{ fontSize: "12px", color: "var(--text-sub)", lineHeight: "1.5", marginBottom: "12px" }}>
                     {t.description}
                   </p>
                 </div>
